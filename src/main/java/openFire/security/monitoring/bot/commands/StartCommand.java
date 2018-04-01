@@ -28,14 +28,14 @@ public class StartCommand extends BotCommand {
         DatabaseManager databseManager = DatabaseManager.getInstance();
         StringBuilder messageBuilder = new StringBuilder();
 
-        String userName = user.getFirstName();
+        String userName = user.getFirstName() + " " + (user.getLastName() != null ? user.getLastName() : "");
 
         if (databseManager.setNewUserForStartBot(user.getId(), user.getUserName())) {
             messageBuilder.append("Hi ").append(userName).append("\n");
             messageBuilder.append("i think we know each other already!");
         } else {
             messageBuilder.append("Welcome ").append(userName).append("\n");
-            messageBuilder.append("this bot will update you about fire monitorings anf fire alatrms");
+            messageBuilder.append("this bot will update you about fire monitorings anf fire alarms");
         }
 
         SendMessage answer = new SendMessage();
@@ -66,7 +66,7 @@ public class StartCommand extends BotCommand {
     }
 
     private void sendAlerts(String alerts, AbsSender absSender, Chat chat) {
-        if (!StringUtils.isNullOrEmpty(alerts)){
+        if (!StringUtils.isNullOrEmpty(alerts)) {
             SendMessage answer = new SendMessage();
             answer.setChatId(chat.getId().toString());
             answer.setText(alerts);

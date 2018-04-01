@@ -2,9 +2,9 @@ package openFire.security.monitoring.iroha;
 
 import openFire.security.monitoring.Receiver;
 import openFire.security.monitoring.model.SensorParameter;
+import openFire.security.monitoring.model.SensorTransaction;
 import openFire.security.monitoring.model.VerifierTransaction;
 import openFire.security.monitoring.model.sensorResponse.SensorStatusMap;
-import openFire.security.monitoring.model.SensorTransaction;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -44,7 +44,7 @@ public class StateMonitoring {
 
             List<SensorTransaction> sensorTransaction = receiver.getAllSensorUpdates();
 
-            return sensorTransaction.stream().filter(t -> t.getSensorId().equals(sensorId)).collect(Collectors.toList());
+            return sensorTransaction.stream().filter(t -> t.getSensorId().equals(sensorId)).limit(15).collect(Collectors.toList());
         } finally {
             try {
                 if (receiver != null) {
@@ -64,7 +64,7 @@ public class StateMonitoring {
 
             List<VerifierTransaction> verifierTransactions = receiver.getAllVerifierUpdates(verifierId);
 
-            return verifierTransactions.stream().filter(t -> t.getSrc_account_id().equals(verifierId)).collect(Collectors.toList());
+            return verifierTransactions.stream().filter(t -> t.getSrc_account_id().equals(verifierId)).limit(15).collect(Collectors.toList());
         } finally {
             try {
                 if (receiver != null) {
@@ -78,7 +78,7 @@ public class StateMonitoring {
     }
 
 
-    public static List<SensorTransaction> getSensorValues(int intervalInMinutes ) {
+    public static List<SensorTransaction> getSensorValues(int intervalInMinutes) {
         Receiver receiver = null;
         try {
             receiver = new Receiver("192.168.1.227", 50051);
@@ -157,28 +157,19 @@ public class StateMonitoring {
     public static String getVerifierAlerts() {
         StringBuilder stringBuilder = new StringBuilder();
         List<VerifierTransaction> verifierTransactions = getVerifierValues(1);
-        stringBuilder.append("Transactions for the last minute:\n");
+        stringBuilder.append("Verifier transactions for the last minute:\n");
         stringBuilder.append(verifierTransactions.toString() + "\n");
 
         final boolean[] alert = {false};
 
-//        verifierTransactions.stream().filter(t -> SensorParameter.Smoke.equals(t.getParameter())).forEach(t -> {
-//            if (t.getValue() >= SMOKE_ALERT_VALUE) {
-//                stringBuilder.append("ALERT! Smoke value is more then " + SMOKE_ALERT_VALUE + " for " + t.toString());
-//                alert[0] = true;
-//            }
-//        });
-//
-//        sensorTransactions.stream().filter(t -> SensorParameter.Temperature.equals(t.getParameter())).forEach(t -> {
-//            if (t.getValue() >= TEMPERATURE_ALERT_VALUE) {
-//                stringBuilder.append("ALERT! Temperature value is more then " + TEMPERATURE_ALERT_VALUE + " for " + t.toString());
-//                alert[0] = true;
-//            }
-//        });
+        verifierTransactions.stream().filter(t -> !t.getRunning()).forEach(t -> {
+            stringBuilder.append("ALERT! Verifier " + t.getSrc_account_id() + " marked sensor " + t.getDest_account_id() + " as not running!");
+            alert[0] = true;
+        });
 
-        verifierTransactions = getVerifierValues(10);
+        verifierTransactions = getVerifierValues(60 * 24 * 7);
         if (verifierTransactions.size() == 0) {
-            stringBuilder.append("ALERT! No notifications from verifier for the last 10 minutes");
+            stringBuilder.append("ALERT! No notifications from verifier for the last week");
             alert[0] = true;
         }
 

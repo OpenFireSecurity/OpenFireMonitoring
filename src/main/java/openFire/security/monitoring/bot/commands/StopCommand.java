@@ -23,11 +23,11 @@ public class StopCommand extends BotCommand {
 
         try {
             dbManager.deleteUser(user.getId());
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        String userName = user.getFirstName() + " " + user.getLastName();
+        String userName = user.getFirstName() + " " + (user.getLastName() != null ? user.getLastName() : "");
 
         SendMessage answer = new SendMessage();
         answer.setChatId(chat.getId().toString());
